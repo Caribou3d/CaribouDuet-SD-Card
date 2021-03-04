@@ -1,33 +1,37 @@
-; Auto calibration routine for an example delta printers
-; Before running this, you should have set up your zprobe Z offset to suit your build, in the G31 command in config.g.
-;you should use https://configurator.reprapfirmware.org/ to setup a correct bed.g file for your printer, what is below is just an example (and its commented out)
+; =========================================================================================================
+;
+; bed.g
+; called to perform automatic bed compensation via G32
+;
+; for Caribou420- E3d Thermistor - PINDA2
+;
+; =========================================================================================================
+;
+M561                                                       ; Clear any existing bed transform.
+G28                                                        ; Home all axis.
+;
+M558 F50 A5 S0.003                                         ; Slow z-probe, up to 5 probes until disparity is 0.003 or less - else yield average.
+while iterations <=2                                       ; Perform 3 passes.
+   G30 P0 X25 Y105 Z-99999                                 ; probe near a leadscrew, half way along Y axis
+   G30 P1 X240 Y105 Z-99999 S2                             ; probe near a leadscrew and calibrate 2 motors
+   G1 X145 F10000                                          ; Move to the center of the bed.
+   G30                                                     ; Probe the bed at the current XY position.
+   M400                                                    ; Finish all moves, clear the buffer.
+;
+M558 F50 A5 S-1                                            ; Slow the z-probe, perform 5 probes and yield the average.
+while move.calibration.initial.deviation >= 0.008          ; Perform additional leveling if previous deviation was over 0.003mm.
+   if iterations = 5                                       ; Perform 5 addition checks, if needed.
+      M300 S3000 P500                                      ; Sound alert, the required deviation could not be achieved.
+      M558 F200 A1                                         ; Set normal z-probe speed.
+      abort "!!! ABORTED !!! Failed to achieve < 0.005 deviation. Current deviation is " ^ move.calibration.initial.deviation ^ "mm."
+      G30 P0 X25 Y105 Z-99999                              ; probe near a leadscrew, half way along Y axis
+      G30 P1 X240 Y105 Z-99999 S2                          ; probe near a leadscrew and calibrate 2 motors
+   G1 X145 F10000                                          ; Move the nozzle to the center of the bed.
+   G30                                                     ; Probe the bed at the current XY position.
+   M400                                                    ; Finish all moves, clear the buffer.
 
-M117 Use https://configurator.reprapfirmware.org/ to set up your printer config
-
-;M561						; clear any bed transform, otherwise homing may be at the wrong height
-;G31 X0 Y0					; don't want any probe offset for this
-;G28							; home the printer
-
-;*** Remove the following line if your Z probe does not need to be deployed
-;M98 Pdeployprobe.g			; deploy the mechanical Z probe
-
-; The first time the mechanical probe is used after deployment, it gives slightly different results.
-; So do an extra dummy probe here. The value stored gets overwritten later. You can remove this if you use an IR probe.
-;G30 P0 X0 Y0 Z-99999
-
-; Probe the bed and do 6- or 7-factor auto calibration
-;G30 P0 X-73.6 Y-42.5 Z-99999	; X tower
-;G30 P1 X0 Y-85 Z-99999			; between X and Y towers
-;G30 P2 X73.6 Y-42.5 Z-99999		; Y tower
-;G30 P3 X73.6 Y20 Z-99999		; between Y and Z towers
-;G30 P4 X0 Y67 Z-99999			; Z tower
-;G30 P5 X-73.6 Y20 Z-99999		; between Z and X towers
-;G30 P6 X-36.8 Y-21.25 Z-99999	; half way to X tower
-;G30 P7 X36.8 Y-21.25 Z-99999	; half way to Y tower
-;G30 P8 X0 Y42.5 Z-99999			; half way to Z tower
-;G30 P9 X0 Y0 Z-99999 S6			; centre, and auto-calibrate 6 factors
-
-;*** Remove the following line if your Z probe does not need to be retracted
-;M98 Pretractprobe.g				; retract the mechanical Z probe
-
-;G1 X0 Y0 Z150 F15000			; get the head out of the way of the bed
+M558 F200 A1                                               ; Set normal z-probe speed.
+echo "Gantry deviation of " ^ move.calibration.initial.deviation ^ "mm obtained."
+G1 Z8                                                      ; Raise nozzle 8mm to ensure it is above the Z probe trigger height.
+;
+; =========================================================================================================

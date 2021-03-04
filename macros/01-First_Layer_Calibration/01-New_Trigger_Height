@@ -1,0 +1,9 @@
+; =========================================================================================================
+;
+; This macro displays the new trigger height after baby steps have been changed
+;
+; =========================================================================================================
+;
+M291 P{"Enter the number for the trigger height in your sheet / nozzle macro, like: G31 Z" ^ sensors.probes[0].triggerHeight - move.axes[2].babystep } S2
+;
+; =========================================================================================================

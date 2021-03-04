@@ -1,0 +1,13 @@
+; =========================================================================================================
+;
+;   Testcode for printing a meander and a rectangle at the end to adjust babysteps
+;
+; =========================================================================================================
+;
+M291 P"First layer calibration for PP. Press OK to continue or CANCEL to abort." R"PP at 254°C" S3
+;
+;====== print meander and square ==========================================================================
+;
+M32 0:/macros/01-First_Layer_Calibration/gcodes/PP-FirstLayerCalibration.gcode
+;
+;====== end meander and square ============================================================================
